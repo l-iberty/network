@@ -9,7 +9,7 @@ Linux自带的tcpdump抓包结果:
 
 ![tcpdump](screenshot/tcpdump.png)
 
-**注：**tcpdump的命令参数:
+**注:**tcpdump的命令参数:
 
 ![tcpdump_args](screenshot/tcpdump_args.png)
 
