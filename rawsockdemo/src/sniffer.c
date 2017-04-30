@@ -109,13 +109,16 @@ int main(int argc, char **argv) {
     struct tcp_hdr *tcphdr;
 
     // 创建原始套接字
+    // 协议类型为 TCP, 所以后续抓取的数据包的 IP Header 的协议类型字段都是 TCP
     raw_sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_TCP);
     if (raw_sockfd < 0) {
         perror("socket");
         return EXIT_FAILURE;
     }
 
-    // 开启 IP_HDRINCL 选项
+    // 开启 IP_HDRINCL 选项, 以获取 IP Header.
+    // When set to TRUE, indicates the application provides the IP header.
+    // Applies only to SOCK_RAW sockets.
     const int flag = 1;
     if (setsockopt(raw_sockfd, IPPROTO_IP, IP_HDRINCL,
                    &flag, sizeof(flag)) < 0) {
