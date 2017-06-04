@@ -209,8 +209,7 @@ int main() {
 
                 // 向连接套接字写入成功, 重新注册读事件, 等待客户端发送消息
                 // 通过debug证实, 对于同一个客户端连接, 之后如果客户端再次
-                // 发送消息, 在读事件中处理的 file descriptor 与此处的
-                // sockfd 等值.
+                // 发送消息, 在读事件中处理的 file descriptor 与此处的sockfd 等值.
                 ev.events = EPOLLIN | EPOLLET;
                 ev.data.fd = sockfd;
                 if (epoll_ctl(epollfd, EPOLL_CTL_MOD, sockfd, &ev) == -1) {
