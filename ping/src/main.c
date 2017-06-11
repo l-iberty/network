@@ -219,7 +219,7 @@ unsigned short transval_16(unsigned short v) {
 }
 
 /**
- * 答应ICMP Header的所有字节
+ * 打印ICMP Header的所有字节
  */
 void print_icmphdr(struct ICMP_HDR *p_icmphdr, size_t len) {
     unsigned char *ptr;
