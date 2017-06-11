@@ -34,25 +34,16 @@ void get_ip(int ip_val, char *ip_buf) {
     ip_buf[strlen(ip_buf) - 1] = '\0';
 }
 
-unsigned short get_port(unsigned short raw_port) {
-    unsigned short ret_port;
+u16 get16val(u16 v) {
+    u16 ret;
 
-    ret_port = (raw_port >> 8) & 0xff;
-    ret_port |= (raw_port & 0xff) << 8;
+    ret = (v >> 8) & 0xff;
+    ret |= (v & 0xff) << 8;
 
-    return ret_port;
+    return ret;
 }
 
-unsigned short get_checksum(unsigned short raw_checksum) {
-    unsigned short ret_checksum;
-
-    ret_checksum = (raw_checksum >> 8) & 0xff;
-    ret_checksum |= (raw_checksum & 0xff) << 8;
-
-    return ret_checksum;
-}
-
-void print_flags(unsigned char flag) {
+void print_flags(u8 flag) {
     printf("[ URG:%d ", (flag >> 5) & 0x01);
     printf("ACK:%d ", (flag >> 4) & 0x01);
     printf("PSH:%d ", (flag >> 3) & 0x01);
@@ -62,11 +53,24 @@ void print_flags(unsigned char flag) {
 
 }
 
-void print_bytes(unsigned char *buf, ssize_t len) {
+void print_bytes(u8 *buf, ssize_t len) {
     for (int i = 0; i < len; i++) {
         printf("%.2x", buf[i]);
         if ((i + 1) % 2 == 0) printf(" ");
         if ((i + 1) % 16 == 0) printf("\n");
+    }
+    printf("\n");
+}
+
+void print_chars(u8 *buf, ssize_t len) {
+    for (int i = 0; i < len; i++) {
+	if (buf[i] < 128 && buf[i] > 31) {
+            printf("%c", buf[i]);
+	}
+	else {
+	    printf(".");
+	}
+	if ((i + 1) % 64 == 0) printf("\n");
     }
     printf("\n");
 }
@@ -90,27 +94,46 @@ void print_iphdrinfo(struct ip_hdr *iphdr) {
     }
 }
 
+void print_udphdrinfo(struct udp_hdr *udphdr){
+    printf("Port: %d -> %d\n",
+           get16val(udphdr->udp_sport),
+           get16val(udphdr->udp_dport));
+    printf("Len: %d\n", get16val(udphdr->udp_len));
+    printf("Check sum: %d\n", get16val(udphdr->udp_checksum));
+}
+
 void print_tcphdrinfo(struct tcp_hdr *tcphdr) {
     printf("Port: %d -> %d\n",
-           get_port(tcphdr->tcp_sport),
-           get_port(tcphdr->tcp_dport));
+           get16val(tcphdr->tcp_sport),
+           get16val(tcphdr->tcp_dport));
     printf("Flags: ");
     print_flags(tcphdr->tcp_flag);
-    printf("Check sum: %d\n", get_checksum(tcphdr->tcp_checksum));
+    printf("Check sum: %d\n", get16val(tcphdr->tcp_checksum));
 }
 
 int main(int argc, char **argv) {
-    unsigned char buf[BUF_SIZE] = {0};
+    u8 buf[BUF_SIZE] = {0};
     struct sockaddr_in addr, cli_addr;
     socklen_t cli_size;
     int raw_sockfd;
     ssize_t bytes_recv;
     struct ip_hdr *iphdr;
     struct tcp_hdr *tcphdr;
+    struct udp_hdr *udphdr;
+    int proto = IPPROTO_TCP;	// default TCP
+
+    printf("protocol type: UDP(u) or TCP(t)? ");
+    char c;
+    scanf("%c", &c);
+    if (c == 'u')
+	proto = IPPROTO_UDP;
+    else if (c == 't')
+	proto = IPPROTO_TCP;
+    else
+	printf("use default: TCP");
 
     // 创建原始套接字
-    // 协议类型为 TCP, 所以后续抓取的数据包的 IP Header 的协议类型字段都是 TCP
-    raw_sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_TCP);
+    raw_sockfd = socket(AF_INET, SOCK_RAW, proto);
     if (raw_sockfd < 0) {
         perror("socket");
         return EXIT_FAILURE;
@@ -127,9 +150,10 @@ int main(int argc, char **argv) {
         return EXIT_FAILURE;
     }
 
+    int i = 0;
     printf("Ready to accept...\n");
     while (1) {
-        printf("-----------------------------------------\n");
+        printf("\n-----------------< %d >-----------------\n", ++i);
 
         cli_size = sizeof(cli_addr);
         bytes_recv = recvfrom(raw_sockfd, buf, sizeof(buf), 0,
@@ -148,9 +172,26 @@ int main(int argc, char **argv) {
         iphdr = (struct ip_hdr *) buf;
         print_iphdrinfo(iphdr);
 
-        printf("\nTCP Header:\n");
-        print_bytes(buf + sizeof(struct ip_hdr), sizeof(struct tcp_hdr));
-        tcphdr = (struct tcp_hdr *) (buf + sizeof(struct ip_hdr));
-        print_tcphdrinfo(tcphdr);
+	if (iphdr->ip_proto == IPPROTO_TCP) {
+	    printf("\nTCP Header:\n");
+            print_bytes(buf + sizeof(struct ip_hdr), sizeof(struct tcp_hdr));
+            tcphdr = (struct tcp_hdr *) (buf + sizeof(struct ip_hdr));
+            print_tcphdrinfo(tcphdr);
+
+            printf("\nData:\n");
+	    print_chars(buf + sizeof(struct ip_hdr) + sizeof(struct tcp_hdr),
+	    	 bytes_recv - sizeof(struct ip_hdr) - sizeof(struct tcp_hdr));
+	}
+	else if (iphdr->ip_proto == IPPROTO_UDP) {
+	    printf("\nUDP Header:\n");
+            print_bytes(buf + sizeof(struct ip_hdr), sizeof(struct udp_hdr));
+            udphdr = (struct udp_hdr *) (buf + sizeof(struct ip_hdr));
+            print_udphdrinfo(udphdr);
+
+	    printf("\nData:\n");
+	    print_chars(buf + sizeof(struct ip_hdr) + sizeof(struct udp_hdr),
+	    	get16val(udphdr->udp_len) - sizeof(struct udp_hdr));
+	}
+	
     }
 }
