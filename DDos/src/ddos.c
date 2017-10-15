@@ -77,7 +77,7 @@ int main() {
     struct psd_hdr psd_hdr;
     u8 send_pkt[BUFSIZE];
 
-    sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+    sockfd = socket(AF_INET, SOCK_RAW, IPPROTO_TCP);
     if (sockfd < 0) {
         perror("socket");
         return 1;
@@ -128,8 +128,8 @@ int main() {
     tcp_hdr.tcp_checksum = transval_16(cksum((u16 *) buf, buflen));
     free(buf);
 
-    memcpy(send_pkt, &ip_hdr, sizeof(ip_hdr));
-    memcpy(send_pkt + sizeof(ip_hdr), &tcp_hdr, sizeof(tcp_hdr));
+    //memcpy(send_pkt, &ip_hdr, sizeof(ip_hdr));
+    memcpy(send_pkt, &tcp_hdr, sizeof(tcp_hdr));
 
     int send_len=sizeof(ip_hdr) + sizeof(tcp_hdr);
     print_bytes(send_pkt, send_len);
@@ -146,7 +146,7 @@ int main() {
         return 1;
     }
 
-    int sockfd_recv = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+    int sockfd_recv = socket(AF_INET, SOCK_RAW, IPPROTO_TCP);
     if (sockfd_recv < 0) {
         perror("socket");
         return 1;
@@ -170,8 +170,6 @@ int main() {
 
     struct tcp_hdr *p_tcp_hdr = (struct tcp_hdr *) (recv_buf + sizeof(ip_hdr));
     print_bytes((recv_buf + sizeof(ip_hdr)), sizeof(tcp_hdr));
-    printf("\ntcp_seq = %x\n", transval_16(p_tcp_hdr->tcp_seq));
-    printf("tcp_ack = %x\n", transval_16(p_tcp_hdr->tcp_ack));
 
     close_socket(sockfd);
     close_socket(sockfd_recv);
