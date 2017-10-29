@@ -86,8 +86,6 @@ unsigned short cksum(unsigned short *p, int len) {
         cksum += answer;
     }
     // cksum是32bits的int, 而校验和需为16bits, 需将cksum的高16bits加到低16bits上
-    int a = cksum >> 16;
-    int b = cksum & 0xffff;
     cksum = (cksum >> 16) + (cksum & 0xffff);
     // 按位求反
     return (~(unsigned short) cksum);
@@ -107,9 +105,7 @@ void set_pkt(struct ICMP_HDR *p_icmphdr, unsigned short seq) {
     // icmp_seq使用小端序填充
     p_icmphdr->icmp_seq = transval_16(seq);
     /**
-     * 校验和的填充必须不能使用小端序, 否则收报失败. 原因可能是接收方在计算校验和时,
-     * 直接将ICMP Header的cksum字段按小端序取出, 并直接与接收方的计算结果(小端序)
-     * 做比对. 如果发送方和接收方的处理规则不同, 接收方会误认为报文出错而不进行回复.
+     * 校验和的填充必须使用网络顺序，即大端序
      */
     unsigned short t = cksum((unsigned short *) p_icmphdr,
                              sizeof(struct ICMP_HDR));
