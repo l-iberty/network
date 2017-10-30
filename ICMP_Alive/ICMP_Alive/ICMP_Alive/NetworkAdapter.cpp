@@ -10,9 +10,14 @@ NetworkAdapter::NetworkAdapter()
 	m_paddr = NULL;
 
 	if (getAllDevs() != -1)
+	{
 		getAdapterParams();
+		m_adhandle = openAdapter();
+	}
 	else
+	{
 		printf("\nError: adapters not found!");
+	}
 }
 
 NetworkAdapter::~NetworkAdapter()
@@ -32,7 +37,7 @@ pcap_t* NetworkAdapter::openAdapter()
 
 	if (adhandle == NULL)
 	{
-		printf("\nError: cannot open the adapter!");
+		printf("\nError: cannot open the adapter: %s", errbuf);
 		pcap_freealldevs(m_alldevs);
 	}
 	return adhandle;
@@ -65,21 +70,6 @@ int NetworkAdapter::getSelfIpAndMask(u_int *pIp, u_int *pMask)
 		return 1;
 	}
 	return 0;
-}
-
-pcap_if_t* NetworkAdapter::getAllDevsPointer()
-{
-	return m_alldevs;
-}
-
-pcap_if_t* NetworkAdapter::getDevPointer()
-{
-	return m_d;
-}
-
-char* NetworkAdapter::getAdapterName()
-{
-	return m_AdapterName;
 }
 
 BOOLEAN NetworkAdapter::GetSelfMac(PUCHAR MacAddr)
@@ -141,6 +131,10 @@ int NetworkAdapter::getAllDevs()
 	int ret = -1;
 	char errbuf[PCAP_ERRBUF_SIZE];
 	ret = pcap_findalldevs_ex(PCAP_SRC_IF_STRING, NULL, &m_alldevs, errbuf);
+	if (ret == -1)
+	{
+		printf("\nError: pcap_findalldevs_ex: %s", errbuf);
+	}
 	return ret; // return (-1) if failed
 }
 

@@ -1,4 +1,5 @@
 #include "IcmpDetect.h"
+#include <assert.h>
 
 DWORD WINAPI recvICMPThread(LPVOID lpParam)
 {
@@ -58,12 +59,11 @@ IcmpDetect::IcmpDetect(u_int net, u_int netmask)
 	m_net = net;
 	m_netmask = netmask;
 	m_hostnum = htonl(~netmask) - 1; // 除去主机号全0的网络地址和主机号全1的广播地址
-	m_AdapterDev = new NetworkAdapter();
 }
 
 IcmpDetect::~IcmpDetect()
 {
-	delete m_AdapterDev;
+
 }
 
 void IcmpDetect::beginDetect()
@@ -75,27 +75,29 @@ void IcmpDetect::beginDetect()
 	u_int dst_ip;
 
 	// 获取本机 MAC 地址
-	if (!m_AdapterDev->GetSelfMac(src_mac))
+	if (!GetSelfMac(src_mac))
 	{
 		printf("\nError: cannot get physical address(MAC) of your PC!");
 		return;
 	}
 	// 获取默认网关对应的 MAC 地址 (即路由器的 MAC 地址)
-	m_AdapterDev->GetMacOfDefaultGateway(dst_mac);
+	GetMacOfDefaultGateway(dst_mac);
 
 	// 获取本机 IP 地址及子网掩码
-	if (m_AdapterDev->getSelfIpAndMask(&src_ip, &netmask) == -1)
+	if (getSelfIpAndMask(&src_ip, &netmask) == -1)
 	{
 		printf("\nError: cannot get ip addr and subnet mask of you PC!");
 		return;
 	}
 
 	PCAP_PARAM param;
-	param.adhandle = m_AdapterDev->openAdapter();
-	param.alldevs = m_AdapterDev->getAllDevsPointer();
-	param.d = m_AdapterDev->getDevPointer();
+	param.adhandle = m_adhandle;
+	param.alldevs = m_alldevs;
+	param.d = m_d;
 	param.filter = m_pkt_filter;
 	param.pfcode = &m_fcode;
+
+	assert(param.adhandle && param.alldevs && param.d);
 
 	// 创建接收线程
 	HANDLE hThread;
@@ -182,11 +184,9 @@ void IcmpDetect::make_icmp_packet(u_char* packet,
 
 void IcmpDetect::sendICMP(u_char* packet, int len)
 {
-	pcap_t* adhandle = m_AdapterDev->openAdapter();
-
-	if (adhandle != NULL)
+	if (m_adhandle != NULL)
 	{
-		if (pcap_sendpacket(adhandle, packet, len) == -1)
+		if (pcap_sendpacket(m_adhandle, packet, len) == -1)
 			printf("\nError: sending packet failed!");
 	}
 }

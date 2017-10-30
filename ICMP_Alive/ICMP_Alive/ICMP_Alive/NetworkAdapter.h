@@ -18,21 +18,19 @@ public:
 
 	pcap_t* openAdapter();
 	int getSelfIpAndMask(u_int *pIp, u_int *pMask);
-	pcap_if_t* getAllDevsPointer();
-	pcap_if_t* getDevPointer();
-	char* getAdapterName();
 
 	BOOLEAN GetSelfMac(PUCHAR MacAddr);
 	VOID GetMacOfDefaultGateway(PUCHAR MacAddr);
 
-private:
+protected:
 	pcap_if_t *m_alldevs;					// 网络适配器链表结构
 	pcap_if_t *m_d;								// 适配器链表节点定位指针
 	int m_devnum;								// 适配器数量 (unused)
-	pcap_t *m_adhandle;					// pcap句柄 (unused)
+	pcap_t *m_adhandle;					// pcap句柄
 	pcap_addr_t *m_paddr;				// 网卡地址结构
-	char m_AdapterName[ADAPTER_NAME_LENGTH];
+	char m_AdapterName[PCAP_BUF_SIZE];
 
+private:
 	int getAllDevs();
 	void getAdapterParams();
 };

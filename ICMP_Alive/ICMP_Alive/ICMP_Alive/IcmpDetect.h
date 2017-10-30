@@ -20,14 +20,13 @@ typedef struct {
 } PCAP_PARAM, *PPCAP_PARAM;
 
 
-class IcmpDetect {
+class IcmpDetect : public NetworkAdapter {
 public:
 	IcmpDetect(u_int net, u_int netmask);
 	~IcmpDetect();
 	void beginDetect();
 
 private:
-	NetworkAdapter* m_AdapterDev;
 	u_int m_net; // 网络地址
 	u_int m_netmask; // 掩码
 	u_int m_hostnum; // 网络内可被分配 ip 的主机数

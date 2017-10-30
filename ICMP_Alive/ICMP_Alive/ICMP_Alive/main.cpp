@@ -23,6 +23,6 @@ int main()
 	icmpDetect->beginDetect();
 	delete icmpDetect;
 
-	printf("\n\nAll alive hosts're as above. Press any key to exit...");
+	printf("\n\nPress any key to exit...");
 	_getch();
 }
