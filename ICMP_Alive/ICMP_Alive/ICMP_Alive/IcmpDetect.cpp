@@ -1,6 +1,8 @@
 #include "IcmpDetect.h"
 #include <assert.h>
 
+int aliveHostsNum;
+
 DWORD WINAPI recvICMPThread(LPVOID lpParam)
 {
 	PPCAP_PARAM pParam = (PPCAP_PARAM)lpParam;
@@ -47,6 +49,7 @@ void packet_handler(u_char *param, const struct pcap_pkthdr *header, const u_cha
 	if (icmph->type == ICMP_REPLY &&
 		icmph->id == (u_short)GetCurrentProcessId())
 	{
+		aliveHostsNum++;
 		addr.S_un.S_addr = iph->saddr;
 		printf("\n%s", inet_ntoa(addr));
 	}
@@ -98,6 +101,8 @@ void IcmpDetect::beginDetect()
 	param.pfcode = &m_fcode;
 
 	assert(param.adhandle && param.alldevs && param.d);
+
+	aliveHostsNum = 0;
 
 	// 创建接收线程
 	HANDLE hThread;

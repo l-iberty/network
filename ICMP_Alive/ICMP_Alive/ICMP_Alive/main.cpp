@@ -7,6 +7,8 @@
 #pragma comment(lib, "Iphlpapi.lib")
 #pragma comment(lib, "Shlwapi.lib")
 
+extern int aliveHostsNum;
+
 int main()
 {
 	u_int net, mask;
@@ -23,6 +25,6 @@ int main()
 	icmpDetect->beginDetect();
 	delete icmpDetect;
 
-	printf("\n\nPress any key to exit...");
+	printf("\n\nNum of alive hosts: %d. Press any key to exit...", aliveHostsNum);
 	_getch();
 }
