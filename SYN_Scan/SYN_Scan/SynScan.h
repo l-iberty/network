@@ -7,17 +7,23 @@
 
 #define SRC_PORT	9999
 #define WIN_SIZE	63443
-
-DWORD WINAPI recvThread(LPVOID lpParam);
-
-// pcap_loop 的回调函数
-void packet_handler(u_char *param, const struct pcap_pkthdr *header, const u_char *pkt_data);
+#define NR_PORTS	65535
 
 // 用于封装传递给线程函数的参数
 typedef struct {
 	pcap_t* adhandle;
 	pcap_if_t* alldevs;
 } PCAP_PARAM, *PPCAP_PARAM;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+DWORD WINAPI recvThread(LPVOID lpParam);
+
+// pcap_loop 的回调函数
+void packet_handler(u_char *param, const struct pcap_pkthdr *header, const u_char *pkt_data);
+
+// 判断收到的TCP报文是否是重传
+bool isRetransmission(const u_char* packet);
 
 
 class SynScan :public NetworkAdapter {

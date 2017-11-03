@@ -13,3 +13,6 @@ TCP连接时client与server先完成三次握手，扫描程序构建第一次�
 ![](screenshot/wireshark.png)
 
 由于server发送SYN_ACK报文后未收到client回复的ACK报文，于是进行超时重传.
+
+- 添加重传判断后:
+![](screenshot/output2.png)

@@ -6,9 +6,9 @@
 #define PADDING_LEN			18		// ARP 数据包的有效载荷长度
 #define ICMP_DATA_LEN		32		// ICMP 数据包的有效载荷长度
 
-typedef unsigned char u_char;
-typedef unsigned short u_short;
-typedef unsigned int u_int;
+typedef unsigned char		u_char;
+typedef unsigned short		u_short;
+typedef unsigned int		u_int;
 
 // 以太网首部
 typedef struct ether_header {

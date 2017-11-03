@@ -1,5 +1,9 @@
 #include "SynScan.h"
 
+// index = port, value = seq
+// e.g. g_PortSeq[port] = seq
+u_int g_PortSeq[NR_PORTS];
+
 DWORD WINAPI recvThread(LPVOID lpParam)
 {
 	PPCAP_PARAM param = (PPCAP_PARAM)lpParam;
@@ -17,12 +21,25 @@ void packet_handler(u_char *param, const struct pcap_pkthdr *header, const u_cha
 	u_short src_port;
 	if ((dst_port == SRC_PORT) &&
 		(recv_pkt->th.flag & SYN) &&
-		(recv_pkt->th.flag & ACK))
+		(recv_pkt->th.flag & ACK) &&
+		!isRetransmission(pkt_data))
 	{
 		saddr.S_un.S_addr = recv_pkt->ih.saddr;
 		src_port = htons(recv_pkt->th.sport);
 		printf("\n%s -- %d", inet_ntoa(saddr), src_port);
+
+		// 记录端口号和序号，用于判断重传
+		g_PortSeq[src_port] = htonl(recv_pkt->th.seq);
 	}
+}
+
+bool isRetransmission(const u_char* packet)
+{
+	tcp_packet* pkt = (tcp_packet*)packet;
+	u_short port = htons(pkt->th.sport);
+	u_int seq = htonl(pkt->th.seq);
+
+	return (g_PortSeq[port] == seq);
 }
 
 /////////////////////////////////////////////// public ///////////////////////////////////////////////
@@ -60,11 +77,14 @@ void SynScan::beginScan()
 	}
 
 	printf("\nscanning...");
-	for (dst_port = 0;dst_port <= 65535;dst_port++)
+	for (dst_port = 0;dst_port < NR_PORTS;dst_port++)
 	{
 		make_syn_packet(packet, dst_port);
 		pcap_sendpacket(m_adhandle, packet, sizeof(packet));
 	}
+
+	printf("\n\nDONE!\n");
+	TerminateThread(hThread, 0);
 }
 
 /////////////////////////////////////////////// private ///////////////////////////////////////////////
