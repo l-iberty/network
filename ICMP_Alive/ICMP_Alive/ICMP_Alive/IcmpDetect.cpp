@@ -27,6 +27,14 @@ DWORD WINAPI recvICMPThread(LPVOID lpParam)
 		return 1;
 	}
 
+	// 设置
+	if (pcap_setfilter(pParam->adhandle, pParam->pfcode) < 0)
+	{
+		printf("\nError setting the filter.\n");
+		pcap_freealldevs(pParam->alldevs);
+		return 1;
+	}
+
 	// 释放设备列表并开始捕获
 	printf("\nThread[%d] listening on %s...\n", GetCurrentThreadId(), pParam->d->description);
 	pcap_freealldevs(pParam->alldevs);

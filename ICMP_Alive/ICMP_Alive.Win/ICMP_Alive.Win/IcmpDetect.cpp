@@ -28,6 +28,14 @@ DWORD WINAPI recvICMPThread(LPVOID lpParam)
 		return 1;
 	}
 
+	// 设置
+	if (pcap_setfilter(pParam->adhandle, pParam->pfcode) < 0)
+	{
+		AddString(g_hListWnd, "\nError setting the filter.\n");
+		pcap_freealldevs(pParam->alldevs);
+		return 1;
+	}
+
 	// 释放设备列表并开始捕获
 	pcap_freealldevs(pParam->alldevs);
 	pcap_loop(pParam->adhandle, 0, packet_handler, NULL);
