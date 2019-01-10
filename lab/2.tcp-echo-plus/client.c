@@ -9,7 +9,6 @@
 #include <netinet/ip.h>
 #include <string.h>
 
-#define PORT 9999
 #define BUF_SIZE 256
 
 int main(int argc, char* argv[])

@@ -72,6 +72,12 @@ int main(int argc, char *argv[]) {
     struct sockaddr_in addr; // 服务端地址结构
     struct sockaddr_in cli_addr; // 客户端地址结构
 
+    if (argc != 3)
+    {
+        printf("usage: %s <server-ip> <port>\n", argv[0]);
+        return EXIT_FAILURE;
+    }
+
     /* 创建监听套接字 */
     if ((sock = socket(PF_INET, SOCK_STREAM, 0)) == -1) {
         fprintf(stderr, "Failed creating socket.\n");
@@ -79,8 +85,8 @@ int main(int argc, char *argv[]) {
     }
 
     addr.sin_family = AF_INET; // IPV4
-    addr.sin_port = htons(ECHO_PORT);
-    addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    addr.sin_port = htons(atoi(argv[2]));
+    addr.sin_addr.s_addr = inet_addr(argv[1]);
 
     /* 绑定监听套接字*/
     if (bind(sock, (struct sockaddr *) &addr, sizeof(addr))) {
@@ -98,7 +104,7 @@ int main(int argc, char *argv[]) {
     }
 
     printf("----- Server -----\n");
-    printf("Listening at %d ...\n", ECHO_PORT);
+    printf("Listening at %d ...\n", atoi(argv[2]));
 
     /* 循环检测是否有连接请求，若有则创建连接套接字并做相应处理 */
     g_conn_num = 0;
